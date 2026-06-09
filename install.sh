@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-CACHE_VERSION="1"
+CACHE_VERSION="2"
 BIN_DIR="${HOME}/.local/bin"
 STARSHIP_CONFIG="${HOME}/.config/starship.toml"
 REPO="jiimaho/starship-ci-status"

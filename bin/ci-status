@@ -1,7 +1,7 @@
 #!/bin/bash
 # Reads CI status from cache; triggers background refresh when stale.
 # Cache is versioned — bump CACHE_VERSION on breaking changes.
-CACHE_VERSION="1"
+CACHE_VERSION="2"
 CACHE_DIR="$HOME/.cache/ci-status/v${CACHE_VERSION}"
 
 branch=$(git branch --show-current 2>/dev/null) || exit 0
@@ -26,16 +26,19 @@ fi
 
 [ ! -f "$cache_file" ] && exit 0
 
-cached=$(cat "$cache_file")
-conclusion="${cached%%|*}"
-name="${cached#*|}"
-
-case "$conclusion" in
-  "success")     icon='\033[1;32m✓\033[0m' ;;
-  "failure")     icon='\033[1;31m✗\033[0m' ;;
-  "in_progress") icon='\033[1;33m⟳\033[0m' ;;
-  "cancelled")   icon='\033[1;90m○\033[0m' ;;
-  *)             exit 0 ;;
-esac
-
-printf "${icon} \033[2m${name}\033[0m"
+first=true
+while IFS= read -r line; do
+  [ -z "$line" ] && continue
+  conclusion="${line%%|*}"
+  name="${line#*|}"
+  case "$conclusion" in
+    "success")     icon='\033[1;32m✓\033[0m' ;;
+    "failure")     icon='\033[1;31m✗\033[0m' ;;
+    "in_progress") icon='\033[1;33m⟳\033[0m' ;;
+    "cancelled")   icon='\033[1;90m○\033[0m' ;;
+    *)             continue ;;
+  esac
+  [ "$first" = "false" ] && printf ' · '
+  printf "${icon} \033[2m${name}\033[0m"
+  first=false
+done < "$cache_file"
