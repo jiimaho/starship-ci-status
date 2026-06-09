@@ -1,0 +1,41 @@
+#!/bin/bash
+# Reads CI status from cache; triggers background refresh when stale.
+# Cache is versioned — bump CACHE_VERSION on breaking changes.
+CACHE_VERSION="1"
+CACHE_DIR="$HOME/.cache/ci-status/v${CACHE_VERSION}"
+
+branch=$(git branch --show-current 2>/dev/null) || exit 0
+[ -z "$branch" ] && exit 0
+
+remote=$(git remote get-url origin 2>/dev/null) || exit 0
+repo=$(echo "$remote" | sed -E 's|https://github\.com/||; s|git@github\.com:||; s|\.git$||')
+[ -z "$repo" ] && exit 0
+
+mkdir -p "$CACHE_DIR"
+cache_key=$(echo "${repo}__${branch}" | tr '/: ' '___')
+cache_file="$CACHE_DIR/$cache_key"
+fetch_lock="$CACHE_DIR/${cache_key}.fetching"
+
+mtime=$(stat -f %m "$cache_file" 2>/dev/null || stat -c %Y "$cache_file" 2>/dev/null || echo 0)
+if [ ! -f "$cache_file" ] || [ $(( $(date +%s) - mtime )) -gt 60 ]; then
+  if [ ! -f "$fetch_lock" ]; then
+    touch "$fetch_lock"
+    (ci-status-fetch "$repo" "$branch" "$cache_file" "$fetch_lock" >/dev/null 2>&1 &)
+  fi
+fi
+
+[ ! -f "$cache_file" ] && exit 0
+
+cached=$(cat "$cache_file")
+conclusion="${cached%%|*}"
+name="${cached#*|}"
+
+case "$conclusion" in
+  "success")     icon='\033[1;32m✓\033[0m' ;;
+  "failure")     icon='\033[1;31m✗\033[0m' ;;
+  "in_progress") icon='\033[1;33m⟳\033[0m' ;;
+  "cancelled")   icon='\033[1;90m○\033[0m' ;;
+  *)             exit 0 ;;
+esac
+
+printf "${icon} \033[2m${name}\033[0m"

@@ -1,0 +1,16 @@
+#!/bin/bash
+# Fetches latest CI run from GitHub API and writes to cache.
+# Invoked in background by ci-status — do not call directly.
+repo="$1"
+branch="$2"
+cache_file="$3"
+fetch_lock="$4"
+
+cleanup() { rm -f "$fetch_lock"; }
+trap cleanup EXIT
+
+result=$(gh run list --repo "$repo" --branch "$branch" -L 1 \
+  --json conclusion,status,name \
+  --jq '.[0] | (if .conclusion != "" then .conclusion elif .status == "in_progress" or .status == "waiting" or .status == "queued" then "in_progress" else "" end) + "|" + .name' \
+  2>/dev/null)
+[ -n "$result" ] && echo "$result" > "$cache_file"
