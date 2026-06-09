@@ -23,9 +23,7 @@ The prompt stays fast — status is fetched in the background and cached for 60 
 ## Install
 
 ```bash
-git clone https://github.com/jiimaho/starship-ci-status.git
-cd starship-ci-status
-./install.sh
+curl -fsSL https://raw.githubusercontent.com/jiimaho/starship-ci-status/main/install.sh | bash
 ```
 
 Then add `${custom.ci_status}` to your format string in `~/.config/starship.toml`:
@@ -39,16 +37,15 @@ $character"""
 ## Uninstall
 
 ```bash
-./uninstall.sh
+curl -fsSL https://raw.githubusercontent.com/jiimaho/starship-ci-status/main/uninstall.sh | bash
 ```
 
 Then remove `${custom.ci_status}` from your format string in `~/.config/starship.toml`.
 
 ## Updating
 
-```bash
-git pull
-./install.sh
-```
+Run the install command again — it replaces the scripts and clears any caches from old versions:
 
-`install.sh` automatically clears caches from old versions when a breaking change is released.
+```bash
+curl -fsSL https://raw.githubusercontent.com/jiimaho/starship-ci-status/main/install.sh | bash
+```

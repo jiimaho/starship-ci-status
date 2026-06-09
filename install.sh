@@ -4,14 +4,22 @@ set -e
 CACHE_VERSION="1"
 BIN_DIR="${HOME}/.local/bin"
 STARSHIP_CONFIG="${HOME}/.config/starship.toml"
+REPO="jiimaho/starship-ci-status"
+RAW="https://raw.githubusercontent.com/${REPO}/main"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 echo "Installing starship-ci-status..."
 
-# Install scripts
 mkdir -p "$BIN_DIR"
-cp "$SCRIPT_DIR/bin/ci-status" "$BIN_DIR/ci-status"
-cp "$SCRIPT_DIR/bin/ci-status-fetch" "$BIN_DIR/ci-status-fetch"
+
+# Install scripts — from local repo if available, otherwise download
+if [ -f "$SCRIPT_DIR/bin/ci-status" ]; then
+  cp "$SCRIPT_DIR/bin/ci-status" "$BIN_DIR/ci-status"
+  cp "$SCRIPT_DIR/bin/ci-status-fetch" "$BIN_DIR/ci-status-fetch"
+else
+  curl -fsSL "$RAW/bin/ci-status" -o "$BIN_DIR/ci-status"
+  curl -fsSL "$RAW/bin/ci-status-fetch" -o "$BIN_DIR/ci-status-fetch"
+fi
 chmod +x "$BIN_DIR/ci-status" "$BIN_DIR/ci-status-fetch"
 echo "  ✓ Scripts installed to $BIN_DIR"
 

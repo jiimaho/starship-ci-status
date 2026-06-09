@@ -9,8 +9,19 @@ fetch_lock="$4"
 cleanup() { rm -f "$fetch_lock"; }
 trap cleanup EXIT
 
-result=$(gh run list --repo "$repo" --branch "$branch" -L 1 \
+# Fetch up to 10 runs so we can find the right one to display:
+# - Prefer an actively running run (status=in_progress) → show ⟳
+# - Otherwise show the most recently completed run
+# - Ignore waiting/queued (deploy gates, approval steps) — they mask real results
+result=$(gh run list --repo "$repo" --branch "$branch" -L 10 \
   --json conclusion,status,name \
-  --jq '.[0] | (if .conclusion != "" then .conclusion elif .status == "in_progress" or .status == "waiting" or .status == "queued" then "in_progress" else "" end) + "|" + .name' \
+  --jq '
+    (map(select(.status == "in_progress")) | .[0]) as $running |
+    (map(select(.status == "completed")) | .[0]) as $done |
+    if $running then "in_progress|" + $running.name
+    elif $done then $done.conclusion + "|" + $done.name
+    else ""
+    end
+  ' \
   2>/dev/null)
 [ -n "$result" ] && echo "$result" > "$cache_file"
