@@ -13,11 +13,18 @@ trap cleanup EXIT
 # - Any actively running run (in_progress) → shown with ⟳
 # - Up to 2 most recently completed runs
 # - Ignore waiting/queued (deploy gates) — they mask real results
+# Display name is "<workflowName>(<displayTitle>)" so it's clear which workflow
+# ran and what triggered it (merged PR title or commit message), e.g. home(Fix SLA timer).
+# displayTitle is truncated to keep the prompt narrow.
 result=$(gh run list --repo "$repo" --branch "$branch" -L 10 \
-  --json conclusion,status,name \
+  --json conclusion,status,workflowName,displayTitle \
   --jq '
     [.[] | select(.status == "in_progress" or .status == "completed")] | .[0:2] |
-    map((if .status == "in_progress" then "in_progress" else .conclusion end) + "|" + .name) |
+    map(
+      (if .status == "in_progress" then "in_progress" else .conclusion end)
+      + "|" + .workflowName
+      + "(" + (.displayTitle | if length > 50 then .[0:49] + "…" else . end) + ")"
+    ) |
     join("\n")
   ' \
   2>/dev/null)

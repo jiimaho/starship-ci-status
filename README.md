@@ -3,8 +3,11 @@
 Shows the latest GitHub Actions CI status for your current branch directly in your [Starship](https://starship.rs) prompt.
 
 ```
- ~/repos/my-project   main  ✓ Build and Deploy   ❯
+ ~/repos/my-project   main  ✓ home(Fix SLA timer)   ❯
 ```
+
+Each entry is `<workflow>(<trigger>)` — the workflow name plus the merged PR title or
+commit message that triggered the run, so you can tell your own runs from someone else's.
 
 | Icon | Meaning |
 |------|---------|

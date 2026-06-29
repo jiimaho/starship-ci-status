@@ -1,7 +1,7 @@
 #!/bin/bash
 # Reads CI status from cache; triggers background refresh when stale.
 # Cache is versioned — bump CACHE_VERSION on breaking changes.
-CACHE_VERSION="2"
+CACHE_VERSION="3"
 CACHE_DIR="$HOME/.cache/ci-status/v${CACHE_VERSION}"
 
 branch=$(git branch --show-current 2>/dev/null) || exit 0
